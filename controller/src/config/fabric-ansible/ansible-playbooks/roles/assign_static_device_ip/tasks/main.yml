@@ -1,0 +1,89 @@
+- name: Check to see if the jinja file for the vendor and family exists
+  stat:
+    path: "../templates/{{prouter_vendor}}_{{prouter_family}}.j2"
+  register: p
+
+- name: Use vendor and family specific template
+  set_fact:
+    jinja_file_path: "../templates/{{prouter_vendor}}_{{prouter_family}}.j2"
+  when: p.stat.exists == True
+
+- name: Use vendor specific template
+  set_fact:
+    jinja_file_path: "../templates/{{prouter_vendor}}.j2"
+  when: p.stat.exists == False
+
+- name: Check to see if the task file for the vendor and family exists
+  stat:
+    path: "{{prouter_vendor}}_{{prouter_family}}.yml"
+  register: p
+
+- name: Use vendor and family specific task
+  set_fact:
+    task_file_path: "{{prouter_vendor}}_{{prouter_family}}.yml"
+  when: p.stat.exists == True
+
+- name: Use vendor specific task
+  set_fact:
+    task_file_path: "{{prouter_vendor}}.yml"
+  when: p.stat.exists == False
+
+- name: Lookup physical router subnet
+  set_fact:
+    subnet: "{{ job_ctx | pr_subnet(fabric_uuid, prouter_fq_name) }}"
+
+- name: Lookup supplemental config
+  set_fact:
+    supplemental_config: "{{ prouter_name | supplemental_config(device_to_ztp, supplemental_day_0_cfg) }}"
+  when:
+    - device_to_ztp is defined
+    - supplemental_day_0_cfg is defined
+
+- name: Generate vendor specific config
+  set_fact:
+    vendor_config: "{{lookup('template', jinja_file_path)}}"
+
+- name: Print vendor specific config
+  debug: var=vendor_config verbosity=1
+
+- name: Update physical device with management interface mac
+  vnc_db_mod:
+    job_ctx: "{{ job_ctx }}"
+    object_type: "physical_router"
+    object_op: "update"
+    object_dict: |
+      {
+        "uuid": "{{ prouter_uuid }}",
+        "physical_router_management_mac": "{{ interface_configuration.get('mac_address') }}"
+      }
+
+- name: Override with vendor specific config
+  include_tasks: "{{ task_file_path }}"
+  vars:
+    load: "override"
+    format: "text"
+    device_config: "{{ vendor_config }}"
+
+- name: Print device response
+  debug: msg="{{ device_push_response }}" verbosity=1
+
+- block:
+    - name: Wait for management port to reinitialize
+      wait_for:
+        host: "{{ host }}"
+        port: 22
+        delay: 0
+        sleep: 5
+
+    - name: Commit device specific supplemental config
+      include_tasks: "{{ task_file_path }}"
+      vars:
+        load: "set"
+        format: "set"
+        device_config: "{{ supplemental_config }}"
+
+    - name: Print device response
+      debug: msg="{{ device_push_response }}" verbosity=1
+  when:
+    - supplemental_config is defined
+    - supplemental_config != ""

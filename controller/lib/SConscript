@@ -1,0 +1,66 @@
+import os
+import platform
+from distutils.version import LooseVersion
+
+subdirs = [
+    'gunit',
+    'http_parser',
+    'pugixml',
+    'rapidjson',
+]
+
+if platform.system() == 'Windows':
+    subdirs += [
+        'boost/windows',
+        'cmocka',
+        'curl-7.24.0/windows',
+        'dirent',
+        'libxml2/windows',
+        'log4cplus/windows',
+        'openssl',
+        'tbb/windows',
+    ]
+else:
+    subdirs += [
+        'bind',
+        'hiredis',
+        'rabbitmq-c',
+        'SimpleAmqpClient',
+        'thrift',
+        'openvswitch',
+        'ipfix',
+        'tbb',
+    ]
+
+    etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL')
+    if etcd_incl:
+        subdirs += ['grpc',]
+
+    (distname, version, _) = platform.dist()
+    if distname == 'Ubuntu' and LooseVersion(version) >= LooseVersion('14.04'):
+        pass
+    elif (distname == 'debian' or distname == 'raspbian') and LooseVersion(version) >= LooseVersion('8'):
+        pass
+    elif (distname == 'centos' or distname == 'redhat') and \
+          (LooseVersion(version) >= LooseVersion('7.0')):
+        subdirs += [
+            'gperftools',
+            'log4cplus',
+        ]
+    else:
+        subdirs += [
+            'boost',
+            'curl-7.24.0',
+            'gperftools',
+            'libxml2',
+            'log4cplus',
+            'icu',
+        ]
+
+    if platform.system() == 'FreeBSD':
+        subdirs += [
+            'icu',
+        ]
+
+for dir in subdirs:
+    SConscript(dirs = dir, variant_dir = '#/build/third_party/' + dir)

@@ -1,0 +1,14 @@
+python-subunit
+testrepository
+flexmock
+coverage
+pyaml
+cfgm_common
+fabric_ansible
+contrail-api-client
+sandesh
+sandesh_common
+junitxml
+timeout-decorator
+requests
+python-swiftclient

@@ -1,0 +1,15 @@
+---
+- name: get node profile hint for physical routers in the fabric
+
+  hosts: localhost
+  gather_facts: no
+  connection: local
+
+  roles:
+    - Juniper.junos
+    - discover_role
+
+  tasks:
+
+    - set_fact:
+        output: "{{output }}"

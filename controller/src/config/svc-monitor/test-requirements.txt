@@ -1,0 +1,14 @@
+coverage
+python-subunit
+junitxml
+testrepository
+mock
+bitarray
+kombu==4.0.2
+gevent==1.1.2
+cfgm_common
+sandesh
+sandesh-common
+contrail-api-client
+contrail-api-server
+vine==1.1.3

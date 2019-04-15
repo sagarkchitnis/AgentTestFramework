@@ -1,0 +1,16 @@
+.venv
+*.pyc
+*.testrepository
+build
+gen
+*.egg-info
+*.log
+*.db
+dist
+.*.sw*
+.project
+.pydevproject
+.idea
+.DS_Store
+Doxygen
+*.retry

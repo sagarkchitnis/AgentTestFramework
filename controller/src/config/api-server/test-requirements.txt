@@ -1,0 +1,9 @@
+lxml>=2.3.3
+flexmock
+webtest
+keystonemiddleware!=4.19.0
+mock
+kombu==4.0.2
+python-novaclient
+pycrypto
+vine==1.1.3
